@@ -62,7 +62,8 @@ S.prototype.Hats = function(t) {
   var g = this.ac.createGain();
   var hpf = this.ac.createBiquadFilter();
   hpf.type = "highpass";
-  hpf.frequency.value = 5000;
+  hpf.frequency.value = 11000;
+  g.gain.value = 0.9;
   g.gain.setValueAtTime(1.0, t);
   g.gain.setTargetAtTime(0.0, t, 0.02);
   s.connect(g);
@@ -86,13 +87,16 @@ S.prototype.Bass = function(t, note) {
   var g2 = this.ac.createGain();
   o.frequency.value = o2.frequency.value = note2freq(note);
   o.type = o2.type = "sawtooth";
+  g.gain.value = 0.8;
   g.gain.setValueAtTime(1.0, t);
   g.gain.setTargetAtTime(0.0, t, 0.1);
-  g2.gain.value = 0.5;
+  g2.gain.value = 0.35;
   var lp = this.ac.createBiquadFilter();
-  lp.Q.value = 25;
-  lp.frequency.setValueAtTime(300, t);
-  lp.frequency.setTargetAtTime(3000, t, 0.05);
+  lp.type = "highpass";
+  lp.frequency.value = 400;
+  lp.Q.value = 30;
+  lp.frequency.setValueAtTime(10, t);
+  lp.frequency.setTargetAtTime(300, t, 0.05);
   o.connect(g);
   o2.connect(g);
   g.connect(lp);
@@ -101,6 +105,104 @@ S.prototype.Bass = function(t, note) {
   o.start(t);
   o.stop(t + 1);
 }
+
+S.prototype.Bass2 = function(t, note) {
+  var o = this.ac.createOscillator();
+  var o2 = this.ac.createOscillator();
+  var g = this.ac.createGain();
+  var g2 = this.ac.createGain();
+  o.frequency.value = o2.frequency.value = note2freq(note);
+  o.type = o2.type = "sawtooth";
+  g.gain.value = 0.75;
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.setTargetAtTime(0.0, t, 0.1);
+  g2.gain.value = 0.35;
+  var lp = this.ac.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 400;
+  lp.Q.value = 30;
+  lp.frequency.setValueAtTime(10, t);
+  lp.frequency.setTargetAtTime(300, t, 0.05);
+  o.connect(g);
+  o2.connect(g);
+  g.connect(lp);
+  lp.connect(g2);
+  g2.connect(this.sink);
+  o.start(t);
+  o.stop(t + 1);
+}
+
+S.prototype.Tom1 = function(t, note) {
+  var o = this.ac.createOscillator();
+  var g = this.ac.createGain();
+  o.connect(g);
+  g.connect(this.sink);
+  g.gain.value = 0.7;
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.setTargetAtTime(0.0, t, 0.1);
+  o.frequency.value = 220;
+  o.frequency.setTargetAtTime(300, t, 0.15);
+  o.start(t);
+  o.stop(t + 1);
+  var osc2 = this.ac.createOscillator();
+  var gain2 = this.ac.createGain();
+  osc2.frequency.value = 100;
+  osc2.type = "square";
+  osc2.connect(gain2);
+  gain2.connect(this.sink);
+  gain2.gain.setValueAtTime(0.5, t);
+  gain2.gain.setTargetAtTime(0.0, t, 0.01);
+  osc2.start(t);
+  osc2.stop(t + 1);
+}
+
+S.prototype.Kick2 = function(t, note) {
+  var o = this.ac.createOscillator();
+  var g = this.ac.createGain();
+  o.connect(g);
+  g.connect(this.sink);
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.setTargetAtTime(0.0, t, 0.1);
+  o.frequency.value = 60;
+  o.frequency.setTargetAtTime(40, t, 0.15);
+  o.start(t);
+  o.stop(t + 1);
+  var osc2 = this.ac.createOscillator();
+  var gain2 = this.ac.createGain();
+  osc2.frequency.value = 40;
+  osc2.type = "pulse";
+  osc2.connect(gain2);
+  gain2.connect(this.sink);
+  gain2.gain.setValueAtTime(0.5, t);
+  gain2.gain.setTargetAtTime(0.0, t, 0.01);
+  osc2.start(t);
+  osc2.stop(t + 1);
+}
+
+S.prototype.Bowow = function(t, note) {
+  var o = this.ac.createOscillator();
+  var g = this.ac.createGain();
+  o.connect(g);
+  g.connect(this.sink);
+  g.gain.value = 0.4;
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.setTargetAtTime(0.0, t, 0.1);
+  o.frequency.value = 174;
+  o.frequency.setTargetAtTime(300, t, 0.15);
+  o.start(t);
+  o.stop(t + 1);
+  var osc2 = this.ac.createOscillator();
+  var gain2 = this.ac.createGain();
+  osc2.frequency.value = 100;
+  osc2.type = "pulse";
+  osc2.connect(gain2);
+  gain2.connect(this.sink);
+  gain2.gain.setValueAtTime(0.5, t);
+  gain2.gain.setTargetAtTime(0.0, t, 0.01);
+  osc2.start(t);
+  osc2.stop(t + 1);
+}
+
 S.prototype.clock = function() {
   var beatLen = 60 / this.track.tempo;
   return (this.ac.currentTime  - this.startTime) / beatLen;
@@ -128,29 +230,96 @@ S.prototype.scheduler = function() {
         }
       }
     }
+
     this.nextScheduling += (60 / this.track.tempo);
   }
+
   setTimeout(this.scheduler.bind(this), 100);
 }
 var track = {
-  tempo: 135,
+  tempo: 96,
   tracks: {
-    Kick: [ 1, 0, 0, 0, 1, 0, 0, 0,
-            1, 0, 0, 0, 1, 0, 0, 0,
-            1, 0, 0, 0, 1, 0, 0, 0,
-            1, 0, 0, 0, 1, 0, 0, 0],
+    Kick: [ 1, 0, 0, 0, 1, 0, 0, 0],
+
+   Kick2: [ 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            1, 0, 0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0, 1, 0],
+            
     Hats: [ 0, 0, 1, 0, 0, 0, 1, 0,
-            0, 0, 1, 0, 0, 0, 1, 1,
+            0, 0, 1, 1, 0, 0, 1, 0,
             0, 0, 1, 0, 0, 0, 1, 0,
-            0, 0, 1, 0, 0, 0, 1, 0 ],
-    Clap: [ 0, 0, 0, 0, 1, 0, 0, 0,
-            0, 0, 0, 0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+    
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 1, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 1,
+
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 0,
+            0, 0, 1, 0, 0, 0, 1, 1 ],
+
+    Clap: [ 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 1, 0, 0, 0,
             0, 0, 0, 0, 1, 0, 0, 0],
-    Bass: [36, 0,38,36,36,38,41, 0,
-           36,60,36, 0,39, 0,48, 0,
-           36, 0,24,60,40,40,24,24,
-           36,60,36, 0,39, 0,48, 0 ]
+
+    Tom1: [ 1, 1, 0, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 1, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 1, 0],
+
+   Bowow: [ 1, 0, 1, 1, 0, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0],
+
+    Bass: [53, 0,60,59, 0,48,47, 39,
+           53, 0,60,59, 0,48,47, 0,
+           53,53,60,59, 0,48,47, 39,
+           53,53,60,59, 0,48,47, 0,
+ 
+           53, 0,60,59, 0,48,47, 39,
+           53, 0,60,59, 0,48,47, 0,
+           53,53,60,59, 0,48,47, 39,
+           53,53,60,59, 0,48,47, 36,
+
+           53, 0, 0,59, 0,48,47, 39,
+           53, 0, 0,59, 0,48,47, 0,
+           53,53, 0,59, 0,48,47, 39,
+           53, 0, 0,59, 0,48,47, 0,
+
+           53, 0, 0,59, 0,48,47, 39,
+           53, 0, 0,59, 0,48,47, 0,
+           53,53, 0,59, 0,48,47, 39,
+           53,53, 0,59, 0,48,47, 36],
+
+    Bass2:[29, 0,24, 0, 0, 0, 0, 24,
+           29, 0,24, 0, 0, 0, 0, 0,
+           29, 0,24, 0, 0, 0, 0, 24,
+           29, 0,24, 0, 0, 0, 0, 0,
+ 
+           29, 0,24, 0, 0, 0, 0, 24,
+           29, 0,24, 0, 0, 0, 0, 0,
+           29, 0,24, 0, 0, 0, 0, 24,
+           29, 0,24, 0, 0, 0, 0, 0,
+
+           29, 0, 0, 0, 0, 0, 0, 24,
+           29, 0, 0, 0, 0, 0, 0, 0,
+           29,29, 0, 0, 0, 0, 0, 24,
+           29,29, 0, 0, 0, 0, 0, 0,
+
+           29, 0, 0, 0, 0, 0, 0, 24,
+           29, 0, 0, 0, 0, 0, 0, 0,
+           29,29, 0, 0, 0, 0, 0, 24,
+           29,29, 0, 0, 0, 0, 0, 0]
   }
 };
 fetch('clap.ogg').then((response) => {
